@@ -90,26 +90,25 @@ public class CleanMetadata extends AbstractCurationTask {
 
     /**
      * All curly/smart quote Unicode characters that should become straight quotes.
-     * U+201C "  U+201D "  U+201E „  U+2033 ″   → U+0022 "
-     * U+2018 '  U+2019 '  U+201A ‚  U+2032 ′   → U+0027 '
+     * Double quote variants → U+0022 "
+     * Single quote / prime variants → U+0027 '
      */
     private static final Pattern CURLY_DOUBLE_PATTERN =
-            Pattern.compile("[\u201C\u201D\u201E\u2033]");
+            Pattern.compile("[\u201C\u201D\u201E\u201F\u2033\u2036\u275D\u275E\u275F\u276E\u276F\uFF02]");
 
     private static final Pattern CURLY_SINGLE_PATTERN =
-            Pattern.compile("[\u2018\u2019\u201A\u2032]");
+            Pattern.compile("[\u2018\u2019\u201A\u201B\u02BC\u2032\u2035\u275B\u275C\uFF07]");
 
     /**
-     * Exactly two hyphens NOT preceded or followed by another hyphen.
-     * Matches:  word--word   text -- text
-     * Skips:    ------   ---   (legal placeholders)
+     * Two hyphens not preceded or followed by another hyphen, plus common
+     * Unicode dash / minus variants that should normalize to an em dash.
      */
-    private static final Pattern DOUBLE_HYPHEN_PATTERN =
-            Pattern.compile("(?<!-)-{2}(?!-)");
+    private static final Pattern DASH_NORMALIZATION_PATTERN =
+            Pattern.compile("(?<!-)-{2}(?!-)|[\u2010\u2011\u2012\u2013\u2014\u2015\u2212]");
 
-    /** Two or more consecutive space characters (U+0020). */
-    private static final Pattern MULTI_SPACE_PATTERN =
-            Pattern.compile(" {2,}");
+    /** Any Unicode whitespace or space-like separator characters. */
+    private static final Pattern WHITESPACE_PATTERN =
+            Pattern.compile("[\\s\\u00A0\\u1680\\u180E\\u2000-\\u200A\\u202F\\u205F\\u3000]+");
 
     // ── Configuration keys (resolved from cleanmetadata.cfg) ─────────────────
 
@@ -296,19 +295,19 @@ public class CleanMetadata extends AbstractCurationTask {
     }
 
     /**
-     * Converts exactly two consecutive hyphens (--) to an em dash (—).
-     * Sequences of three or more hyphens are left untouched.
+     * Converts exactly two consecutive hyphens (--) and common Unicode dash
+     * variants to an em dash (—). Sequences of three or more hyphens are left untouched.
      */
     private String normalizeDashes(String value) {
-        return DOUBLE_HYPHEN_PATTERN.matcher(value).replaceAll("\u2014");
+        return DASH_NORMALIZATION_PATTERN.matcher(value).replaceAll("\u2014");
     }
 
     /**
-     * Strips leading and trailing spaces and collapses internal runs of
-     * two or more spaces to a single space.
+     * Strips leading and trailing space-like characters and collapses internal
+     * runs of whitespace to a single ASCII space.
      */
     private String normalizeWhitespace(String value) {
-        return MULTI_SPACE_PATTERN.matcher(value.strip()).replaceAll(" ");
+        return WHITESPACE_PATTERN.matcher(value.strip()).replaceAll(" ");
     }
 
     // ── Utility helpers ───────────────────────────────────────────────────────
