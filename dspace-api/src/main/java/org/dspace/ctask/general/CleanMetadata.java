@@ -57,7 +57,7 @@ import org.dspace.content.factory.ContentServiceFactory;
 import org.dspace.content.service.ItemService;
 import org.dspace.handle.factory.HandleServiceFactory;
 import org.dspace.handle.service.HandleService;
-import org.dspace.core.AuthorizeException;
+import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
 import org.dspace.curate.AbstractCurationTask;
@@ -184,7 +184,14 @@ public class CleanMetadata extends AbstractCurationTask {
     @Override
     public int perform(DSpaceObject dso) throws IOException {
 
-        Context context = Curator.curationContext();
+        Context context;
+        try {
+            context = Curator.curationContext();
+        } catch (SQLException e) {
+            log.error("Unable to obtain curator context: {}", e.getMessage(), e);
+            setResult("Error: " + e.getMessage());
+            return Curator.CURATE_ERROR;
+        }
 
         // Skip anything that is not an Item
         if (dso.getType() != Constants.ITEM) {
