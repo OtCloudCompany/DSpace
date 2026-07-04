@@ -147,8 +147,8 @@ public class CleanMetadata extends AbstractCurationTask {
      * Reads configuration from cleanmetadata.cfg via taskProperty().
      */
     @Override
-    public void init(Curator curator, String taskId) throws IOException {
-        super.init(curator, taskId);
+    public void init(Context context, Curator curator, String taskId) throws IOException {
+        super.init(context, curator, taskId);
 
         // Read boolean flags
         fixQuotes     = taskBooleanProperty(PROP_FIX_QUOTES,     true);
@@ -181,16 +181,7 @@ public class CleanMetadata extends AbstractCurationTask {
      * @return a Curator status code
      */
     @Override
-    public int perform(DSpaceObject dso) throws IOException {
-
-        Context context;
-        try {
-            context = Curator.curationContext();
-        } catch (SQLException e) {
-            log.error("Unable to obtain curator context: {}", e.getMessage(), e);
-            setResult("Error: " + e.getMessage());
-            return Curator.CURATE_ERROR;
-        }
+    public int perform(Context context, DSpaceObject dso) throws IOException {
 
         // Skip anything that is not an Item
         if (dso.getType() != Constants.ITEM) {
