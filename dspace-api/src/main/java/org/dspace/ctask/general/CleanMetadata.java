@@ -44,7 +44,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
@@ -53,10 +52,6 @@ import org.apache.logging.log4j.Logger;
 import org.dspace.content.DSpaceObject;
 import org.dspace.content.Item;
 import org.dspace.content.MetadataValue;
-import org.dspace.content.factory.ContentServiceFactory;
-import org.dspace.content.service.ItemService;
-import org.dspace.handle.factory.HandleServiceFactory;
-import org.dspace.handle.service.HandleService;
 import org.dspace.authorize.AuthorizeException;
 import org.dspace.core.Constants;
 import org.dspace.core.Context;
@@ -78,13 +73,7 @@ public class CleanMetadata extends AbstractCurationTask {
 
     private static final Logger log = LogManager.getLogger(CleanMetadata.class);
 
-    // ── Services ─────────────────────────────────────────────────────────────
-
-    private final ItemService itemService =
-            ContentServiceFactory.getInstance().getItemService();
-
-    private final HandleService handleService =
-            HandleServiceFactory.getInstance().getHandleService();
+    // itemService and handleService are inherited from AbstractCurationTask
 
     // ── Regex patterns ────────────────────────────────────────────────────────
 
@@ -147,8 +136,8 @@ public class CleanMetadata extends AbstractCurationTask {
      * Reads configuration from cleanmetadata.cfg via taskProperty().
      */
     @Override
-    public void init(Context context, Curator curator, String taskId) throws IOException {
-        super.init(context, curator, taskId);
+    public void init(Curator curator, String taskId) throws IOException {
+        super.init(curator, taskId);
 
         // Read boolean flags
         fixQuotes     = taskBooleanProperty(PROP_FIX_QUOTES,     true);
@@ -181,7 +170,14 @@ public class CleanMetadata extends AbstractCurationTask {
      * @return a Curator status code
      */
     @Override
-    public int perform(Context context, DSpaceObject dso) throws IOException {
+    public int perform(DSpaceObject dso) throws IOException {
+
+        Context context;
+        try {
+            context = Curator.curationContext();
+        } catch (SQLException e) {
+            throw new IOException(e.getMessage(), e);
+        }
 
         // Skip anything that is not an Item
         if (dso.getType() != Constants.ITEM) {

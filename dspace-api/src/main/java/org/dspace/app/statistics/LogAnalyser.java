@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -43,7 +45,7 @@ import org.dspace.services.factory.DSpaceServicesFactory;
 
 /**
  * This class performs all the actual analysis of a given set of DSpace log
- * files.  Most input can be configured; use the -help flag for a full list
+ * files. Most input can be configured; use the -help flag for a full list
  * of usage information.
  *
  * <p>
@@ -279,8 +281,8 @@ public class LogAnalyser {
      */
     private static String fileTemplate = "dspace\\.log.*";
 
-    private static final ConfigurationService configurationService =
-            DSpaceServicesFactory.getInstance().getConfigurationService();
+    private static final ConfigurationService configurationService = DSpaceServicesFactory.getInstance()
+            .getConfigurationService();
 
     /**
      * the configuration file from which to configure the analyser
@@ -316,10 +318,11 @@ public class LogAnalyser {
     /**
      * Default constructor
      */
-    private LogAnalyser() { }
+    private LogAnalyser() {
+    }
 
     /**
-     * main method to be run from command line.  See usage information for
+     * main method to be run from command line. See usage information for
      * details as to how to use the command line flags (-help)
      *
      * @param argv the command line arguments given
@@ -327,7 +330,7 @@ public class LogAnalyser {
      * @throws SQLException if database error
      */
     public static void main(String[] argv)
-        throws Exception, SQLException {
+            throws Exception, SQLException {
         // first, start the processing clock
         startTime = Instant.now();
 
@@ -418,12 +421,15 @@ public class LogAnalyser {
      * and produce the aggregation file
      *
      * @param context        the DSpace context object this occurs under
-     * @param myLogDir       the passed log directory.  Uses default if null
-     * @param myFileTemplate the passed file name regex.  Uses default if null
-     * @param myConfigFile   the DStat config file.  Uses default if null
-     * @param myOutFile      the file to which to output aggregation data.  Uses default if null
-     * @param myStartDate    the desired start of the analysis.  Starts from the beginning otherwise
-     * @param myEndDate      the desired end of the analysis.  Goes to the end otherwise
+     * @param myLogDir       the passed log directory. Uses default if null
+     * @param myFileTemplate the passed file name regex. Uses default if null
+     * @param myConfigFile   the DStat config file. Uses default if null
+     * @param myOutFile      the file to which to output aggregation data. Uses
+     *                       default if null
+     * @param myStartDate    the desired start of the analysis. Starts from the
+     *                       beginning otherwise
+     * @param myEndDate      the desired end of the analysis. Goes to the end
+     *                       otherwise
      * @param myLookUp       force a lookup of the database
      * @return aggregate output
      * @throws IOException            if IO error
@@ -431,24 +437,24 @@ public class LogAnalyser {
      * @throws SearchServiceException if search error
      */
     public static String processLogs(Context context, String myLogDir,
-                                     String myFileTemplate, String myConfigFile,
-                                     String myOutFile, LocalDate myStartDate,
-                                     LocalDate myEndDate, boolean myLookUp)
-        throws IOException, SQLException, SearchServiceException {
+            String myFileTemplate, String myConfigFile,
+            String myOutFile, LocalDate myStartDate,
+            LocalDate myEndDate, boolean myLookUp)
+            throws IOException, SQLException, SearchServiceException {
         // FIXME: perhaps we should have all parameters and aggregators put
         // together in a single aggregating object
 
         // if the timer has not yet been started, then start it
         startTime = Instant.now();
 
-        //instantiate aggregators
+        // instantiate aggregators
         actionAggregator = new HashMap<>();
         searchAggregator = new HashMap<>();
         userAggregator = new HashMap<>();
         itemAggregator = new HashMap<>();
         archiveStats = new HashMap<>();
 
-        //instantiate lists
+        // instantiate lists
         generalSummary = new ArrayList<>();
         excludeWords = new ArrayList<>();
         excludeTypes = new ArrayList<>();
@@ -479,7 +485,7 @@ public class LogAnalyser {
         // for every log file do analysis
         // FIXME: it is easy to implement not processing log files after the
         // dates exceed the end boundary, but is there an easy way to do it
-        // for the start of the file?  Note that we can assume that the contents
+        // for the start of the file? Note that we can assume that the contents
         // of the log file are sequential, but can we assume the files are
         // provided in a data sequence?
         for (i = 0; i < logFiles.length; i++) {
@@ -607,11 +613,11 @@ public class LogAnalyser {
             }
         }
 
-        // do we want to do a database lookup?  Do so only if the start and
+        // do we want to do a database lookup? Do so only if the start and
         // end dates are null or lookUp is true
-        // FIXME: this is a kind of separate section.  Would it be worth building
+        // FIXME: this is a kind of separate section. Would it be worth building
         // the summary string separately and then inserting it into the real
-        // summary later?  Especially if we make the archive analysis more complex
+        // summary later? Especially if we make the archive analysis more complex
         archiveStats.put("All Items", getNumItems(context));
         for (i = 0; i < itemTypes.size(); i++) {
             archiveStats.put(itemTypes.get(i), getNumItems(context, itemTypes.get(i)));
@@ -630,8 +636,8 @@ public class LogAnalyser {
             // FIXME: this is dependent on their being a query on the db, which
             // there might not always be if it becomes configurable
             double avg = Math.ceil(
-                (actionAggregator.get("view_item")).doubleValue() /
-                    (archiveStats.get("All Items")).doubleValue());
+                    (actionAggregator.get("view_item")).doubleValue() /
+                            (archiveStats.get("All Items")).doubleValue());
             views = Math.round(avg);
         }
 
@@ -639,9 +645,8 @@ public class LogAnalyser {
         return createOutput();
     }
 
-
     /**
-     * set the passed parameters up as global class variables.  This has to
+     * set the passed parameters up as global class variables. This has to
      * be done in a separate method because the API permits for running from
      * the command line with args or calling the processLogs method statically
      * from elsewhere
@@ -655,9 +660,9 @@ public class LogAnalyser {
      * @param myLookUp       requested look up force flag
      */
     public static void setParameters(String myLogDir, String myFileTemplate,
-                                     String myConfigFile, String myOutFile,
-                                     LocalDate myStartDate, LocalDate myEndDate,
-                                     boolean myLookUp) {
+            String myConfigFile, String myOutFile,
+            LocalDate myStartDate, LocalDate myEndDate,
+            boolean myLookUp) {
 
         if (myLogDir != null) {
             logDir = myLogDir;
@@ -687,7 +692,6 @@ public class LogAnalyser {
             outFile = configurationService.getProperty("log.report.dir") + File.separator + "dstat.dat";
         }
     }
-
 
     /**
      * generate the analyser's output to the specified out file
@@ -784,10 +788,10 @@ public class LogAnalyser {
 
         // FIXME: we should do a lot more with the search aggregator
         // Possible feature list:
-        //  - constrain by collection/community perhaps?
-        //  - we should consider building our own aggregator class which can
-        //      be full of rich data.  Perhaps this and the Stats class should
-        //      be the same thing.
+        // - constrain by collection/community perhaps?
+        // - we should consider building our own aggregator class which can
+        // be full of rich data. Perhaps this and the Stats class should
+        // be the same thing.
 
         // item viewing information
         summary.append("item_floor=").append(itemFloor).append("\n");
@@ -826,7 +830,6 @@ public class LogAnalyser {
         return summary.toString();
     }
 
-
     /**
      * get an array of file objects representing the passed log directory
      *
@@ -848,9 +851,8 @@ public class LogAnalyser {
         return logs.listFiles();
     }
 
-
     /**
-     * set up the regular expressions to be used by this analyser.  Mostly this
+     * set up the regular expressions to be used by this analyser. Mostly this
      * exists to provide a degree of segregation and readability to the code
      * and to ensure that you only need to set up the regular expressions to
      * be used once
@@ -890,11 +892,11 @@ public class LogAnalyser {
 
         // set up the standard log file line regular expression
         String logLineBase = "^(\\d\\d\\d\\d-\\d\\d\\-\\d\\d) \\d\\d:\\d\\d:\\d\\d,\\d\\d\\d (\\w+)\\s+\\S+ @ (.*)";
-        //date time LEVEL class @ whatever
+        // date time LEVEL class @ whatever
         String logLine13 = "^(\\d\\d\\d\\d-\\d\\d\\-\\d\\d) \\d\\d:\\d\\d:\\d\\d,\\d\\d\\d (\\w+)\\s+\\S+ @ ([^:]+)" +
-            ":[^:]+:([^:]+):(.*)";
+                ":[^:]+:([^:]+):(.*)";
         String logLine14 = "^(\\d\\d\\d\\d-\\d\\d\\-\\d\\d) \\d\\d:\\d\\d:\\d\\d,\\d\\d\\d (\\w+)\\s+\\S+ @ ([^:]+)" +
-            ":[^:]+:[^:]+:([^:]+):(.*)";
+                ":[^:]+:[^:]+:([^:]+):(.*)";
         valid13 = Pattern.compile(logLine13);
         valid14 = Pattern.compile(logLine14);
         validBase = Pattern.compile(logLineBase);
@@ -956,14 +958,14 @@ public class LogAnalyser {
      * @throws IOException if IO error
      */
     public static void readConfig(String configFile) throws IOException {
-        //instantiate aggregators
+        // instantiate aggregators
         actionAggregator = new HashMap<>();
         searchAggregator = new HashMap<>();
         userAggregator = new HashMap<>();
         itemAggregator = new HashMap<>();
         archiveStats = new HashMap<>();
 
-        //instantiate lists
+        // instantiate lists
         generalSummary = new ArrayList<>();
         excludeWords = new ArrayList<>();
         excludeTypes = new ArrayList<>();
@@ -1061,12 +1063,12 @@ public class LogAnalyser {
 
     /**
      * Take the standard date string requested at the command line and convert
-     * it into a Date object.  Throws and error and exits if the date does
+     * it into a Date object. Throws and error and exits if the date does
      * not parse
      *
      * @param date the string representation of the date
      * @return a date object containing the date, with the time set to
-     * 00:00:00
+     *         00:00:00
      */
     public static LocalDate parseDate(String date) {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
@@ -1081,6 +1083,20 @@ public class LogAnalyser {
         return parsedDate;
     }
 
+    /**
+     * Take the date object and convert it into an Instant datetime object of the
+     * form YYYY-MM-DDTHH:MM:SSZ
+     *
+     * @param date the date to be converted
+     * @return An Instant datetime object of the form YYYY-MM-DDTHH:MM:SSZ
+     */
+    public static Instant convertDate(LocalDate date, boolean startOfDay) {
+        if (startOfDay) {
+            return date.atStartOfDay(ZoneId.systemDefault()).toInstant();
+        } else {
+            return date.atTime(LocalTime.MAX).atZone(ZoneId.systemDefault()).toInstant();
+        }
+    }
 
     /**
      * Take the date object and convert it into a string of the form YYYY-MM-DD
@@ -1091,7 +1107,6 @@ public class LogAnalyser {
     public static String unParseDate(LocalDate date) {
         return DateTimeFormatter.ISO_LOCAL_DATE.format(date);
     }
-
 
     /**
      * Take a search query string and pull out all of the meaningful information
@@ -1148,7 +1163,6 @@ public class LogAnalyser {
         return words;
     }
 
-
     /**
      * split the given line into it's relevant segments if applicable (i.e. the
      * line matches the required regular expression.
@@ -1157,7 +1171,7 @@ public class LogAnalyser {
      * @return a Log Line object for the given line
      */
     public static LogLine getLogLine(String line) {
-        // FIXME: consider moving this code into the LogLine class.  To do this
+        // FIXME: consider moving this code into the LogLine class. To do this
         // we need to much more carefully define the structure and behaviour
         // of the LogLine class
         Matcher match;
@@ -1171,27 +1185,25 @@ public class LogAnalyser {
         if (match.matches()) {
             // set up a new log line object
             LogLine logLine = new LogLine(parseDate(match.group(1).trim()),
-                                          LogHelper.unescapeLogField(match.group(2)).trim(),
-                                          LogHelper.unescapeLogField(match.group(3)).trim(),
-                                          LogHelper.unescapeLogField(match.group(4)).trim(),
-                                          LogHelper.unescapeLogField(match.group(5)).trim());
+                    LogHelper.unescapeLogField(match.group(2)).trim(),
+                    LogHelper.unescapeLogField(match.group(3)).trim(),
+                    LogHelper.unescapeLogField(match.group(4)).trim(),
+                    LogHelper.unescapeLogField(match.group(5)).trim());
 
             return logLine;
         } else {
             match = validBase.matcher(line);
             if (match.matches()) {
                 LogLine logLine = new LogLine(parseDate(match.group(1).trim()),
-                                              LogHelper.unescapeLogField(match.group(2)).trim(),
-                                              null,
-                                              null,
-                                              null
-                );
+                        LogHelper.unescapeLogField(match.group(2)).trim(),
+                        null,
+                        null,
+                        null);
                 return logLine;
             }
             return null;
         }
     }
-
 
     /**
      * get the number of items in the archive which were accessioned between
@@ -1205,11 +1217,11 @@ public class LogAnalyser {
      * @throws SearchServiceException if search error
      */
     public static Integer getNumItems(Context context, String type)
-        throws SQLException, SearchServiceException {
+            throws SQLException, SearchServiceException {
         // FIXME: this method is clearly not optimised
 
         // FIXME: we don't yet collect total statistics, such as number of items
-        // withdrawn, number in process of submission etc.  We should probably do
+        // withdrawn, number in process of submission etc. We should probably do
         // that
 
         DiscoverQuery discoverQuery = new DiscoverQuery();
@@ -1218,14 +1230,15 @@ public class LogAnalyser {
         }
         StringBuilder accessionedQuery = new StringBuilder();
         accessionedQuery.append("dc.date.accessioned_dt:[");
+
         if (startDate != null) {
-            accessionedQuery.append(unParseDate(startDate));
+            accessionedQuery.append(convertDate(startDate, true));
         } else {
             accessionedQuery.append("*");
         }
         accessionedQuery.append(" TO ");
         if (endDate != null) {
-            accessionedQuery.append(unParseDate(endDate));
+            accessionedQuery.append(convertDate(endDate, false));
         } else {
             accessionedQuery.append("*");
         }
@@ -1237,66 +1250,64 @@ public class LogAnalyser {
         return (int) SearchUtils.getSearchService().search(context, discoverQuery).getTotalSearchResults();
     }
 
-
     /**
      * get the total number of items in the archive at time of execution,
      * ignoring all other constraints
      *
      * @param context the DSpace context the action is being performed in
      * @return an Integer containing the number of items in the
-     * archive
+     *         archive
      * @throws SQLException           if database error
      * @throws SearchServiceException if search error
      */
     public static Integer getNumItems(Context context)
-        throws SQLException, SearchServiceException {
+            throws SQLException, SearchServiceException {
         return getNumItems(context, null);
     }
-
 
     /**
      * print out the usage information for this class to the standard out
      */
     public static void usage() {
         String usage = "Usage Information:\n" +
-            "LogAnalyser [options [parameters]]\n" +
-            "-log [log directory]\n" +
-            "\tOptional\n" +
-            "\tSpecify a directory containing log files\n" +
-            "\tDefault uses [dspace.dir]/log from dspace.cfg\n" +
-            "-file [file name regex]\n" +
-            "\tOptional\n" +
-            "\tSpecify a regular expression as the file name template.\n" +
-            "\tCurrently this needs to be correctly escaped for Java string handling (FIXME)\n" +
-            "\tDefault uses dspace.log*\n" +
-            "-cfg [config file path]\n" +
-            "\tOptional\n" +
-            "\tSpecify a config file to be used\n" +
-            "\tDefault uses dstat.cfg in dspace config directory\n" +
-            "-out [output file path]\n" +
-            "\tOptional\n" +
-            "\tSpecify an output file to write results into\n" +
-            "\tDefault uses dstat.dat in dspace log directory\n" +
-            "-start [YYYY-MM-DD]\n" +
-            "\tOptional\n" +
-            "\tSpecify the start date of the analysis\n" +
-            "\tIf a start date is specified then no attempt to gather \n" +
-            "\tcurrent database statistics will be made unless -lookup is\n" +
-            "\talso passed\n" +
-            "\tDefault is to start from the earliest date records exist for\n" +
-            "-end [YYYY-MM-DD]\n" +
-            "\tOptional\n" +
-            "\tSpecify the end date of the analysis\n" +
-            "\tIf an end date is specified then no attempt to gather \n" +
-            "\tcurrent database statistics will be made unless -lookup is\n" +
-            "\talso passed\n" +
-            "\tDefault is to work up to the last date records exist for\n" +
-            "-lookup\n" +
-            "\tOptional\n" +
-            "\tForce a lookup of the current database statistics\n" +
-            "\tOnly needs to be used if date constraints are also in place\n" +
-            "-help\n" +
-            "\tdisplay this usage information\n";
+                "LogAnalyser [options [parameters]]\n" +
+                "-log [log directory]\n" +
+                "\tOptional\n" +
+                "\tSpecify a directory containing log files\n" +
+                "\tDefault uses [dspace.dir]/log from dspace.cfg\n" +
+                "-file [file name regex]\n" +
+                "\tOptional\n" +
+                "\tSpecify a regular expression as the file name template.\n" +
+                "\tCurrently this needs to be correctly escaped for Java string handling (FIXME)\n" +
+                "\tDefault uses dspace.log*\n" +
+                "-cfg [config file path]\n" +
+                "\tOptional\n" +
+                "\tSpecify a config file to be used\n" +
+                "\tDefault uses dstat.cfg in dspace config directory\n" +
+                "-out [output file path]\n" +
+                "\tOptional\n" +
+                "\tSpecify an output file to write results into\n" +
+                "\tDefault uses dstat.dat in dspace log directory\n" +
+                "-start [YYYY-MM-DD]\n" +
+                "\tOptional\n" +
+                "\tSpecify the start date of the analysis\n" +
+                "\tIf a start date is specified then no attempt to gather \n" +
+                "\tcurrent database statistics will be made unless -lookup is\n" +
+                "\talso passed\n" +
+                "\tDefault is to start from the earliest date records exist for\n" +
+                "-end [YYYY-MM-DD]\n" +
+                "\tOptional\n" +
+                "\tSpecify the end date of the analysis\n" +
+                "\tIf an end date is specified then no attempt to gather \n" +
+                "\tcurrent database statistics will be made unless -lookup is\n" +
+                "\talso passed\n" +
+                "\tDefault is to work up to the last date records exist for\n" +
+                "-lookup\n" +
+                "\tOptional\n" +
+                "\tForce a lookup of the current database statistics\n" +
+                "\tOnly needs to be used if date constraints are also in place\n" +
+                "-help\n" +
+                "\tdisplay this usage information\n";
 
         System.out.println(usage);
     }
