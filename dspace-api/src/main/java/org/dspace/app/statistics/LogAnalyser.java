@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -1094,6 +1096,27 @@ public class LogAnalyser {
 
 
     /**
+     * Convert a date into an Instant suitable for a Solr date range query.
+     *
+     * A bare YYYY-MM-DD string is not a valid Solr date and makes Solr reject
+     * the query, so the date is widened to a full instant: the start of the
+     * day for a range's lower bound, the last moment of the day for its upper
+     * bound, so that both endpoints are inclusive.
+     *
+     * @param date       the date to be converted
+     * @param startOfDay true for the start of the day, false for the end of it
+     * @return the corresponding Instant in the system default time zone
+     */
+    public static Instant convertDate(LocalDate date, boolean startOfDay) {
+        if (startOfDay) {
+            return date.atStartOfDay(ZoneId.systemDefault()).toInstant();
+        } else {
+            return date.atTime(LocalTime.MAX).atZone(ZoneId.systemDefault()).toInstant();
+        }
+    }
+
+
+    /**
      * Take a search query string and pull out all of the meaningful information
      * from it, giving the results in the form of a String array, a single word
      * to each element
@@ -1219,13 +1242,13 @@ public class LogAnalyser {
         StringBuilder accessionedQuery = new StringBuilder();
         accessionedQuery.append("dc.date.accessioned_dt:[");
         if (startDate != null) {
-            accessionedQuery.append(unParseDate(startDate));
+            accessionedQuery.append(convertDate(startDate, true));
         } else {
             accessionedQuery.append("*");
         }
         accessionedQuery.append(" TO ");
         if (endDate != null) {
-            accessionedQuery.append(unParseDate(endDate));
+            accessionedQuery.append(convertDate(endDate, false));
         } else {
             accessionedQuery.append("*");
         }
